@@ -14,5 +14,7 @@ class base_site:
         self.news = await self.get()
 
     async def save(self):
+        result = {'name':self.name,'news':[]}
         for n in self.news:
-            print(n)
+            result['news'].append(n.__dict__)
+        return result
