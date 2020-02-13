@@ -1,2 +1,4 @@
 aiohttp
 aiofile
+jieba
+pyecharts

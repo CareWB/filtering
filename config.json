@@ -1,5 +1,8 @@
       
 {
+    "output":"./result.json",
+    "stop_words":"./stopwords.txt",
+    "wordcloud_output":"./wordcloud.html",
     "sites":[
         {
             "name":"微博",
