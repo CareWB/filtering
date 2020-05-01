@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
+  <title>Vant CDN Demo</title>
+
+  <!-- 引入样式文件 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.6/lib/index.css">
+
+  <!-- 自定义样式 -->
+  <style>
+    body {
+      color: #333;
+      background-color: #f8f8f8;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <!-- 模板 -->
+    <div>
+      <van-nav-bar title="Filtering" fixed=true placeholder=true>
+        <template #left>
+          <van-icon @click="showPopup" name="wap-nav" size="30" />
+        </template>
+      </van-nav-bar>
+      <van-popup v-model="show_pop" position="top" :style="{ height: '50%' }">
+        <div><van-search v-model="search" placeholder="请输入搜索关键词" /></div>
+        <div v-for="(sites, group) in group_sites" :style="{ padding: '10px 12px' }">
+          <div :style="{ fontWeight: 'bold', fontSize: '14px', color: 'rgba(0,0,0,.65)' }" >{{group}}</div>
+          <van-grid :clickable="true" :column-num="4" :gutter='0.00001'>
+            <van-grid-item v-for="site in sites" :key="site" @click="News(site)" :text="site" />
+          </van-grid>
+        </div>
+      </van-popup>
+
+      <van-tabs @click="onTabClick">
+        <van-tab v-for="(sites, group) in group_sites" :title="group" :name="group" >
+        </van-tab>
+      </van-tabs>
+      <van-cell :style="{ height: '90px' }" >
+        <van-button v-show="!hot_words_loading" :style="{ margin: '3px 3px' }" size="small" plain  v-for="hot in hot_words" :key="hot[0]" @click="Hot(hot[0])">{{hot[0]}} : {{hot[1]}}</van-button>
+        <van-loading type="spinner" v-show="hot_words_loading" :style="{ textAlign: 'center', marginTop: '25px' }"/>
+      </van-cell>
+      <van-skeleton title :row="2" :loading="news_loading" :style="{ padding: '10px', backgroundColor: '#fff' }">
+        <van-cell v-for="news in data" :key="news" :label="news.time + ' | ' + news.site">
+          <template #title>
+            <a :style="{ color: 'rgba(0,0,0,.85)' }" v-if="news.url.length>0" :href="news.url" target="_blank">{{news.title}}</a>
+            <a :style="{ color: 'rgba(0,0,0,.85)' }" v-else >{{news.title}}</a>
+          </template>
+        </van-cell>
+      </van-skeleton>
+      <div :style="{ textAlign: 'center', padding: '10px', fontSize: '14px' }">Filtering ©2020 Created by CareWB</div>
+
+    </div>
+  </div>
+
+  <!-- 引入 Vue 和 Vant 的 JS 文件 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@vant/touch-emulator"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vant@2.6/lib/vant.min.js"></script>
+  <script src="https://cdn.bootcss.com/axios/0.19.2/axios.min.js"></script>
+  
+
+  <script>
+    // 初始化 Vue 实例
+    new Vue({
+      el: '#app',
+
+      data() {
+        return {
+          data: [],
+          prex: 'http://localhost:8100',
+          group_sites : {},
+          hot_words: [],
+          show_pop: false,
+          news_loading: false,
+          hot_words_loading: false,
+          search: '',
+        };
+      },
+
+      mounted: function () {
+        axios
+          .get(this.prex + '/api/groups')
+          .then(resp => {
+            this.group_sites = resp.data;
+          })
+          .catch(resp => {
+            console.log(resp);
+          });
+      },
+
+      methods: {
+        News(e) {
+          document.documentElement.scrollTop = 0;
+          this.news_loading = true;
+          axios
+            .get(this.prex + '/api/sites/' + e)
+            .then(resp => {
+              this.data = resp.data.news;
+              this.show_pop = false;
+              this.news_loading = false;
+            })
+            .catch(resp => {
+              console.log(resp);
+              this.show_pop = false;
+              this.news_loading = false;
+            });
+        },
+
+        onTabClick(name, title) {
+          let vm = this
+          document.documentElement.scrollTop = 0;
+          vm.news_loading = true;
+          vm.hot_words_loading = true;
+          axios
+            .get(vm.prex + '/api/group_news/' + name)
+            .then(resp => {
+              vm.data = resp.data.news;
+              vm.news_loading = false;
+            })
+            .catch(resp => {
+              console.log(resp);
+              vm.show_pop = false;
+              vm.news_loading = false;
+            });
+
+          axios
+            .get(vm.prex + '/api/hotwords/' + name)
+            .then(resp => {
+              vm.hot_words = resp.data;
+              vm.hot_words_loading = false;
+            })
+            .catch(resp => {
+              console.log(resp);
+              vm.hot_words_loading = false;
+            });
+        },
+        // onTabClick(name, title) {
+        //   let vm = this
+        //   axios.all([
+        //     axios.get(this.prex + '/api/hotwords/' + name),
+        //     axios.get(this.prex + '/api/group_news/' + name)
+        //   ])
+        //   .then(axios.spread(function (hotwordsResp, groupNewsResp) {
+        //     document.documentElement.scrollTop = 0;
+        //     vm.hot_words = hotwordsResp.data;
+        //     vm.data = groupNewsResp.data.news;
+        //   }));
+        // },
+        onMenu() {
+          console.log('menu');
+        },
+        onSearch(val) {
+          console.log(val);
+        },
+        showPopup() {
+          console.log(this.show_pop)
+          this.show_pop = true;
+        },
+      }
+    });
+  </script>
+</body>
+</html>

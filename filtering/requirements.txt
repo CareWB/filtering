@@ -1,0 +1,4 @@
+scrapy
+reids
+jieba
+DBUtils
