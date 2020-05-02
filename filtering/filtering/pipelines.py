@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from scrapy.exporters import CsvItemExporter
 import zlib
-import sqlite3
 from filtering.settings import *
 import time
 import pymysql

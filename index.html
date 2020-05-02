@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, viewport-fit=cover">
-  <title>Vant CDN Demo</title>
+  <title>Filtering</title>
 
   <!-- 引入样式文件 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.6/lib/index.css">
@@ -14,6 +14,15 @@
     body {
       color: #333;
       background-color: #f8f8f8;
+    }
+    .van-cell, .van-tab {
+      font-size: 16px;
+    }
+    .van-grid-item__text {
+      font-size: 14px;
+    }
+    .van-nav-bar__title, .van-tab__text {
+      font-weight: bold;
     }
   </style>
 </head>
@@ -28,21 +37,21 @@
         </template>
       </van-nav-bar>
       <van-popup v-model="show_pop" position="top" :style="{ height: '50%' }">
-        <div><van-search v-model="search" placeholder="请输入搜索关键词" /></div>
+        <div><van-search v-model="search" placeholder="请输入搜索关键词" @search="onSearch" /></div>
         <div v-for="(sites, group) in group_sites" :style="{ padding: '10px 12px' }">
-          <div :style="{ fontWeight: 'bold', fontSize: '14px', color: 'rgba(0,0,0,.65)' }" >{{group}}</div>
-          <van-grid :clickable="true" :column-num="4" :gutter='0.00001'>
-            <van-grid-item v-for="site in sites" :key="site" @click="News(site)" :text="site" />
+          <div :style="{ fontWeight: 'bold', fontSize: '16px', color: 'rgba(0,0,0,.65)' }" >{{group}}</div>
+          <van-grid :clickable="true" :column-num="3" :gutter='0.00001'>
+            <van-grid-item v-for="site in sites" :key="site" @click="siteNews(site, group)" :text="site" />
           </van-grid>
         </div>
       </van-popup>
 
-      <van-tabs @click="onTabClick">
+      <van-tabs @click="groupNews" v-model="current_group">
         <van-tab v-for="(sites, group) in group_sites" :title="group" :name="group" >
         </van-tab>
       </van-tabs>
-      <van-cell :style="{ height: '90px' }" >
-        <van-button v-show="!hot_words_loading" :style="{ margin: '3px 3px' }" size="small" plain  v-for="hot in hot_words" :key="hot[0]" @click="Hot(hot[0])">{{hot[0]}} : {{hot[1]}}</van-button>
+      <van-cell v-if="show_hot_words" :style="{ height: '90px' }" >
+        <van-button v-show="!hot_words_loading" :style="{ margin: '3px 3px' }" size="small" plain  v-for="hot in hot_words" :key="hot[0]" :type="hot[0]==current_hot_word?'info':'default'" @click="Hot(hot[0])">{{hot[0]}} : {{hot[1]}}</van-button>
         <van-loading type="spinner" v-show="hot_words_loading" :style="{ textAlign: 'center', marginTop: '25px' }"/>
       </van-cell>
       <van-skeleton title :row="2" :loading="news_loading" :style="{ padding: '10px', backgroundColor: '#fff' }">
@@ -53,7 +62,9 @@
           </template>
         </van-cell>
       </van-skeleton>
-      <div :style="{ textAlign: 'center', padding: '10px', fontSize: '14px' }">Filtering ©2020 Created by CareWB</div>
+      <div :style="{ textAlign: 'center', padding: '10px', fontSize: '14px' }">Filtering ©2020 Created by CareWB
+        <a :style="{ color: 'rgba(0,0,0,.85)' }" target="_blank" href="http://beian.miit.gov.cn">粤ICP备20015266号</a>
+      </div>
 
     </div>
   </div>
@@ -73,17 +84,21 @@
       data() {
         return {
           data: [],
-          prex: 'http://localhost:8100',
+          prex: '',
           group_sites : {},
           hot_words: [],
           show_pop: false,
           news_loading: false,
+          show_hot_words: false,
           hot_words_loading: false,
+          current_hot_word: '',
+          current_group: '技术',
           search: '',
         };
       },
 
       mounted: function () {
+        console.log(this.current_group)
         axios
           .get(this.prex + '/api/groups')
           .then(resp => {
@@ -92,28 +107,50 @@
           .catch(resp => {
             console.log(resp);
           });
+
+          this.groupNews(this.current_group, this.current_group);
       },
 
       methods: {
-        News(e) {
+        siteNews(e, group) {
+          this.show_hot_words = false;
+          this.current_group = group;
+          this.show_pop = false;
           document.documentElement.scrollTop = 0;
           this.news_loading = true;
+          this.current_hot_word = ''
           axios
             .get(this.prex + '/api/sites/' + e)
             .then(resp => {
               this.data = resp.data.news;
-              this.show_pop = false;
               this.news_loading = false;
             })
             .catch(resp => {
               console.log(resp);
-              this.show_pop = false;
               this.news_loading = false;
             });
         },
 
-        onTabClick(name, title) {
-          let vm = this
+        Hot(e) {
+          document.documentElement.scrollTop = 0;
+          this.news_loading = true;
+          this.current_hot_word = e;
+          axios
+            .get(this.prex + '/api/hotword/'+this.current_group+'/'+e)
+            .then(resp => {
+              this.data = resp.data.news;
+              this.news_loading = false;
+            })
+            .catch(resp => {
+              console.log(resp);
+              this.news_loading = false;
+            });
+        },
+
+        groupNews(name, title) {
+          let vm = this;
+          vm.current_hot_word = ''
+          vm.show_hot_words = true;
           document.documentElement.scrollTop = 0;
           vm.news_loading = true;
           vm.hot_words_loading = true;
@@ -157,9 +194,23 @@
         },
         onSearch(val) {
           console.log(val);
+          this.show_pop = false;
+          this.show_hot_words = false;
+          document.documentElement.scrollTop = 0;
+          this.news_loading = true;
+          this.current_hot_word = ''
+          axios
+            .get(this.prex + '/api/search/' + val)
+            .then(resp => {
+              this.data = resp.data.news;
+              this.news_loading = false;
+            })
+            .catch(resp => {
+              console.log(resp);
+              this.news_loading = false;
+            });
         },
         showPopup() {
-          console.log(this.show_pop)
           this.show_pop = true;
         },
       }
