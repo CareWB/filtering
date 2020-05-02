@@ -2,7 +2,6 @@ from flask import Flask
 from flask import jsonify
 from flask import Response
 import json
-import sqlite3
 import pymysql
 import time
 from filtering.settings import *
@@ -124,6 +123,26 @@ def hotword(group, word):
     conn = POOL.connection()
     cursor = conn.cursor()
     cursor.execute(sql, (group,dt,'%'+word+'%',))
+    result = cursor.fetchall()
+    conn.close()
+
+    itmes = []
+    for r in result:
+        itmes.append({
+                    'id':r[0],
+                    'site':r[1],
+                    'title':r[2],
+                    'url':r[3],
+                    'time':r[4]})
+
+    return json.dumps({'site':'','news':itmes}, ensure_ascii=False)
+
+@app.route('/api/search/<word>',methods=['GET'])
+def search(word):
+    sql = "SELECT ID, SITE, TITLE, URL, TIME FROM NEWS WHERE TITLE LIKE %s ORDER BY TIME DESC,SN"
+    conn = POOL.connection()
+    cursor = conn.cursor()
+    cursor.execute(sql, ('%'+word+'%',))
     result = cursor.fetchall()
     conn.close()
 
