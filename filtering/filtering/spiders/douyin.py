@@ -10,7 +10,7 @@ class DouYinSpider(scrapy.Spider):
     alias = '抖音'
     group = '新闻娱乐'
 
-    start_urls = ['https://creator.douyin.com/aweme/v1/creator/data/billboard/?billboard_type=1']
+    start_urls = ['https://creator.douyin.com/aweme/v1/creator/data/billboard/?billboard_type=4']
 
     def parse(self, response):
         data = json.loads(response.text)
@@ -18,7 +18,7 @@ class DouYinSpider(scrapy.Spider):
         for i in sub:
             item = FilteringItem()
             item['title'] = i['title']
-            item['url'] = ''
+            item['url'] = i['link']
             item['site'] = self.alias
             item['time'] = int(data['extra']['now']/1000)
             item['group'] = self.group

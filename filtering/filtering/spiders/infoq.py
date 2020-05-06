@@ -19,7 +19,7 @@ class InfoQSpider(XMLFeedSpider):
         item['url'] = selector.css("link::text").extract_first()
         t = time.mktime(
             time.strptime(selector.css("pubDate::text").extract_first(), 
-            "%a, %d %b %Y %H:%M:%S +%f")
+            "%a, %d %b %Y %H:%M:%S GMT")
         )
         item['time'] = int(t)
         item['site'] = self.alias
