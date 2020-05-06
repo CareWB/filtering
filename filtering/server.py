@@ -11,6 +11,7 @@ from dbhelper import POOL
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
+jieba.load_userdict('./worddict.txt') 
 
 def get_cursor():
     conn = POOL.connection()
