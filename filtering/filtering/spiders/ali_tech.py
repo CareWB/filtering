@@ -10,18 +10,19 @@ class AliTechSpider(scrapy.Spider):
     group = '技术'
 
     def start_requests(self):
-        headers = {'Host':'www.waijiedanao.com'}
-        urls = ['https://www.waijiedanao.com/api/posts?page=1&limit=50&profile=5d9146c694539e5e82d896c8&q=&isOriginal=false']
+        headers = {
+               'User-Agent':'Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Mobile Safari/537.36'}
+        urls = ['https://www.zhihu.com/org/a-li-ji-zhu']
         for url in urls:
             yield scrapy.Request(url=url, headers=headers, callback=self.parse)
 
     def parse(self, response):
-        data = json.loads(response.text)
-        for i in data['data']:
+        for i in response.css('div.ContentItem.ArticleItem'):
             item = FilteringItem()
-            t = time.mktime(time.strptime(i['publishAt'], "%Y-%m-%dT%H:%M:%S.000Z"))
-            item['title'] = i['title']
-            item['url'] = i['link']
+            item['title'] = i.css('[itemprop=headline]::attr(content)').get()
+            item['url'] = 'https:' + i.css('a::attr(href)').get()
+            t = i.css('[itemprop=datePublished]::attr(content)').get()
+            t = time.mktime(time.strptime(t, "%Y-%m-%dT%H:%M:%S.000Z"))
             item['time'] = int(t)
             item['site'] = self.alias
             item['group'] = self.group

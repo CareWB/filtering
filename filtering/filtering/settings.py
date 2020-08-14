@@ -21,11 +21,11 @@ REDIS_EXP_TIME = 30
 
 SQLITE = ''
 
-MYSQL_IP = ''
+MYSQL_IP = '111.229.138.14'
 MYSQL_PORT = 3306
-MYSQL_USER = ''
-MYSQL_PW = ''
-MYSQL_DB = ''
+MYSQL_USER = 'root'
+MYSQL_PW = 'Zte0-0=0'
+MYSQL_DB = 'scrapy'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
