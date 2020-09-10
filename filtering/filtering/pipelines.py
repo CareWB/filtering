@@ -30,7 +30,7 @@ class FilteringPipeline(object):
         item['id'] = zlib.crc32(id_str.encode('utf8'))
         
         t = time.localtime(int(item['time']))
-        dt = time.strftime("%m-%d %H:%M",t)
+        dt = time.strftime("%Y-%m-%d %H:%M",t)
 
         values = (
             int(item['id']),
