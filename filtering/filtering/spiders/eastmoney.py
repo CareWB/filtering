@@ -5,10 +5,10 @@ import time
 from filtering.items import FilteringItem
 
 class XueqiuSpider(scrapy.Spider):
-    name = 'xueqiu'
-    alias = '雪球'
+    name = 'eastmoney'
+    alias = '东方财富'
     group = '财经'
-    start_urls = ['https://www.anyknew.com/api/v1/sites/xueqiu']
+    start_urls = ['https://www.anyknew.com/api/v1/sites/eastmoney']
 
     def parse(self, response):
         data = json.loads(response.text)
